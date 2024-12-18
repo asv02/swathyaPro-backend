@@ -1,10 +1,30 @@
 from datetime import datetime
 from flask import  jsonify, request
-from models import db, Appointment, AppointmentHistory,Doctor, Payment
+from models import db, Appointment, AppointmentHistory,Doctor, User
 from flask_login import login_required,current_user 
 
 
-#Should take time as input so that the time should be locked.
+#return dictionary
+@login_required
+def get_appointment(userId):
+    appointments = (
+        db.session.query(
+            Appointment.userId,
+            Appointment.appointment_time,
+            Appointment.appointment_location,
+            Appointment.status_of_appointment,
+            Appointment.doctorId,
+            Appointment.is_payment_made,
+            Appointment.user_informed,
+            Appointment.doctor_informed,
+            Appointment.payment_to_doctor
+        )
+        .filter(Appointment.userId == userId)
+        .all()
+    )
+
+    return [dict(zip(Appointment.__table__.columns.keys(), row)) for row in appointments]
+
 @login_required
 def book_appointment():
     try:
@@ -17,7 +37,7 @@ def book_appointment():
 
         # Create a new Appointment instance
         new_appointment = Appointment(
-            user_id=current_user.id,  # Link the appointment to the logged-in user
+            userId=current_user.userId,  # Link the appointment to the logged-in user
             appointment_time=datetime.strptime(data["appointment_time"], "%Y-%m-%d %H:%M:%S"),  # Parse the datetime string
             appointment_location=data["appointment_location"], #clinic location
             doctorId = data["doctorId"],
@@ -36,8 +56,8 @@ def book_appointment():
 
         appointmentHistory=AppointmentHistory(
             appointment_id=new_appointment.id,
-            user_id=new_appointment.user_id,
-            doctor_id=new_appointment.doctor_id,
+            userId=new_appointment.userId,
+            doctor_id=new_appointment.doctorId,
             original_appointment_time=new_appointment.created_at,
             updated_appointment_time=new_appointment.updated_at
         )
@@ -70,7 +90,7 @@ def update_appointment(appointment_id):
 
         # Handle user-specific update (appointment time)
         if "appointment_time" in data:
-            if current_user.id != appointment.user_id:
+            if current_user.id != appointment.userId:
                 return jsonify({"error": "Unauthorized to update appointment time"}), 403
 
             # Parse and validate the new appointment time
@@ -86,7 +106,7 @@ def update_appointment(appointment_id):
             # Log the change in AppointmentHistory
             appointment_history_entry = AppointmentHistory(
                 appointment_id=appointment.id,
-                user_id=appointment.user_id,
+                userId=appointment.userId,
                 doctor_id=appointment.doctor_id,
                 original_appointment_time=appointment.appointment_time,
                 updated_appointment_time=new_time,
@@ -120,7 +140,7 @@ def update_appointment(appointment_id):
                 # Log the status change in AppointmentHistory
             appointment_history_entry = AppointmentHistory(
                 appointment_id=appointment.id,
-                user_id=appointment.user_id,
+                userId=appointment.userId,
                 doctor_id=appointment.doctor_id,
                 original_appointment_time=appointment.appointment_time,
                 updated_appointment_time=None,

@@ -31,7 +31,7 @@ class Appointment(db.Model):
     __tablename__ = 'appointments'
 
     id = db.Column(db.Integer, primary_key=True)
-    userId = db.Column(db.String(50), db.ForeignKey('users.userId'), nullable=False,unique=True)  # Foreign key to the User model
+    userId = db.Column(db.String(50), db.ForeignKey('users.userId'), nullable=False)  # Foreign key to the User model
     appointment_time = db.Column(db.DateTime, nullable=False)
     appointment_location = db.Column(db.String(50), nullable=False) #will store location as clinicID.
     status_of_appointment = db.Column(db.Boolean, default=False)  # False = Not completed, True = Completed/Cancelled
@@ -54,8 +54,8 @@ class AppointmentHistory(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=False)  # Foreign key to Appointment
-    user_id = db.Column(db.String(50), db.ForeignKey('users.userId'), nullable=False,unique=True)  # Foreign key to User
-    doctor_id = db.Column(db.Integer, nullable=False)  # The doctor ID for the historical appointment
+    userId = db.Column(db.String(50), db.ForeignKey('users.userId'), nullable=False)  # Foreign key to User
+    doctor_id = db.Column(db.String(50), nullable=False)  # The doctor ID for the historical appointment
     original_appointment_time = db.Column(db.DateTime, nullable=False)  # Original appointment time
     updated_appointment_time = db.Column(db.DateTime, nullable=True)  # Updated appointment time (if changed)
     status = db.Column(db.String(50), nullable=False, default="Scheduled")  # Status of the appointment (Scheduled, Cancelled, Rescheduled, etc.)
@@ -77,15 +77,13 @@ class Doctor(UserMixin,db.Model):
     # id = db.Column(db.Integer, primary_key=True)  # Unique identifier for the doctor
     first_name = db.Column(db.String(100), nullable=False)  # First name of the doctor
     last_name = db.Column(db.String(100), nullable=False)  # Last name of the doctor
-    doctorId = db.Column(db.String(50), unique=True, nullable=False,primary_key=True) #doctor would not get option to set doctorId
+    doctorId = db.Column(db.String(50), unique=True, nullable=False,primary_key=True) #doctor would get option to set doctorId
     email = db.Column(db.String(120), unique=True, nullable=False)  # Email of the doctor (must be unique)
     password = db.Column(db.String(200), nullable=False)  # Hashed password for login
-    contact = db.Column(db.String(15), unique=True, nullable=False)  # Contact number of the doctor
+    contact = db.Column(db.String(15), nullable=False)  # Contact number of the doctor
     alternate_contact = db.Column(db.String(15), nullable=True)  # Optional alternate contact
     specialization = db.Column(db.String(100), nullable=False)  # Doctor's specialization (e.g., Cardiologist, Dentist)
     years_of_experience = db.Column(db.Integer, nullable=False)  # Number of years of experience
-    clinic_address = db.Column(db.String(255), nullable=False)  # Address of the clinic
-    clinic_pincode = db.Column(db.String(6), nullable=False)  # Pincode of the clinic location
     state = db.Column(db.String(50), nullable=False)  # State of the clinic
     available_time_start = db.Column(db.Time, nullable=False)  # Start time of availability
     available_time_end = db.Column(db.Time, nullable=True)  # End time of availability
@@ -120,7 +118,7 @@ class Payment(db.Model):
     __tablename__ = 'payments'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(50), db.ForeignKey('users.userId'), nullable=False,unique=True)  # Foreign key to the User model
+    userId = db.Column(db.String(50), db.ForeignKey('users.userId'), nullable=False,unique=True)  # Foreign key to the User model
     appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     tax = db.Column(db.Float, nullable=False)

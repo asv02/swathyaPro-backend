@@ -16,7 +16,6 @@ def gen_doctor_id():
    return f"D_{count+1}"
 
 
-
 # Cloudinary configuration
 cloudinary.config(
     cloud_name="dni5wcbsz",
@@ -31,9 +30,13 @@ def register():
         data = request.get_json()
 
         # Validate input data
-        required_fields = ["first_name", "last_name", "email", "password", "date_of_birth", "contact"]
+        required_fields = ["userId","first_name", "last_name", "email", "password", "date_of_birth", "contact"]
         if not data or not all(key in data for key in required_fields):
             return jsonify({"error": "Invalid input data"}), 400
+
+        # Check if the userId is already in use
+        if User.query.filter_by(userId=data["userId"]).first():
+            return jsonify({"error": "User with this userId is already registered"}), 409
 
         # Check if the email is already in use
         if User.query.filter_by(email=data["email"]).first():
@@ -45,15 +48,15 @@ def register():
         # Create a new User instance
         new_user = User(
             first_name=data["first_name"],
-            userId=gen_patient_id(),
+            userId=data["userId"],
             last_name=data["last_name"],
             email=data["email"],
             password=hashed_password.decode('utf-8'),  # Store the hashed password as a string
             date_of_birth=data["date_of_birth"],
-            contact=data["contact"],
-            alternate_contact=data.get("alternate_contact"),
+            contact=int(data["contact"]),
+            alternate_contact=(data.get("alternate_contact")),
             address=data["address"],
-            pincode=data["pincode"],
+            pincode=int(data["pincode"]),
             state=data["state"]
         )
 
@@ -72,9 +75,13 @@ def doctor_registration():
         image = request.files.get('image')
 
         # Validate input data
-        required_fields = ["first_name", "last_name", "email", "password", "contact", "specialization", "years_of_experience", "clinic_address", "clinic_pincode", "state", "available_time_start"]
+        required_fields = ["doctorId","first_name", "last_name", "email", "password", "contact", "specialization", "years_of_experience", "clinic_address", "clinic_pincode", "state", "available_time_start"]
         if not data or not all(field in data for field in required_fields):
             return jsonify({"error": "Invalid input data"}), 400
+
+        # Check if the email is already in use
+        if Doctor.query.filter_by(doctorId=data["doctorId"]).first():
+            return jsonify({"error": "Doctor with this doctorId is already registered"}), 409
 
         # Check if the email is already in use
         if Doctor.query.filter_by(email=data["email"]).first():
@@ -98,7 +105,7 @@ def doctor_registration():
         new_doctor = Doctor(
             first_name=data["first_name"],
             last_name=data["last_name"],
-            doctorId=gen_doctor_id(),
+            doctorId=data["doctorId"],
             email=data["email"],
             password=hashed_password.decode('utf-8'),  #hashed password is provided
             contact=data["contact"],
@@ -137,14 +144,23 @@ def login():
         user= User.query.filter_by(email=email).first()
         doctor = Doctor.query.filter_by(email=email).first()
         if user and bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
-            loginuser=login_user(user)
+            login_user(user)
+            loginUser={"userId":current_user.userId,"firstName":current_user.first_name,"lastName":current_user.last_name,"dob":current_user.date_of_birth,"contact":current_user.contact,"alternate_contact":current_user.alternate_contact,"email":current_user.email,"address":current_user.address,"pincode":current_user.pincode,"state":current_user.state}
             print(current_user)
+            return jsonify(loginUser), 201
         elif doctor and bcrypt.checkpw(password.encode('utf-8'), doctor.password.encode('utf-8')):
-            logindoctor=login_user(doctor) 
-        print("current_user directory->",current_user,dir(current_user))
-        return jsonify({"Success":"Login Successfull"}), 201
-    else:
-        return jsonify({"error": "Invalid credentials"}), 400
+            login_user(doctor) 
+            logindoctor={"firstName":current_user.first_name,
+                         "last_name":current_user.last_name,
+                         "doctorId":current_user.doctorId,
+                         "email":current_user.email,
+                         "contact":current_user.contact,
+                         "alternate_contact":current_user.alternate_contact,"specialization":current_user.specialization,"yearsOfExperience":current_user.years_of_experience,"state":current_user.state,"is_active":current_user.is_active,
+                         "image_url":current_user.image_url}
+            # print("current_user directory->",current_user,dir(current_user))
+            return jsonify(logindoctor), 201
+        else:
+         return jsonify({"error": "Invalid credentials"}), 400
     
 def logout():
     logout_user()

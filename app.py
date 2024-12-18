@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager, login_required
 import os
-from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_location_of_clinics,update_location_of_clinics,delete_location_of_clinics,add_location_of_clinics
+from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_location_of_clinics,update_location_of_clinics,delete_location_of_clinics,add_location_of_clinics,get_appointment,delete_appointment
 from models import db,User,Doctor
 
 app = Flask(__name__)
@@ -34,7 +34,10 @@ app.add_url_rule('/auth/logout', view_func=logout, methods=['POST'])
 #user routes
 app.add_url_rule('/auth/register', view_func=register, methods=['POST'])
 app.add_url_rule('/appointments/book', view_func=login_required(book_appointment), methods=['POST'])
+app.add_url_rule('/appointments/get/<userId>', view_func=login_required(get_appointment), methods=['GET'])
+app.add_url_rule('/appointments/delete/<appointmentId>', view_func=login_required(delete_appointment), methods=['DELETE'])
 app.add_url_rule('/appointments/update/<int:appointment_id>', view_func=login_required(update_appointment), methods=['PUT'])
+
 # doctor routes
 app.add_url_rule('/auth/doctor/register', view_func=doctor_registration, methods=['POST'])
 app.add_url_rule('/doctor/getclinics/<doctorId>', view_func=get_location_of_clinics, methods=['GET'])

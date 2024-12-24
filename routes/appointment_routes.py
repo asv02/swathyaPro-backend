@@ -163,3 +163,6 @@ def update_appointment(appointment_id):
 
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+    
+def delete_appointment(appointmentId):
+    pass

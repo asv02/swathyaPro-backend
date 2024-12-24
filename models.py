@@ -101,7 +101,7 @@ class Doctor(UserMixin,db.Model):
 class Clinic(db.Model):
     __tablename__='clinics'
     id=db.Column(db.Integer,primary_key=True)
-    clinicId=db.Column(db.String(50),nullable=True,unique=True)
+    clinicId=db.Column(db.String(50),nullable=False,unique=True)
     doctor_at_clinic=db.Column(db.String(50),db.ForeignKey('doctors.doctorId'),nullable=False)
     active_status = db.Column(db.Boolean,default=True,nullable=False) # True-> active / False  -> Inactive
     address= db.Column(db.String(200),nullable=False)
@@ -112,7 +112,26 @@ class Clinic(db.Model):
     discount_percentage= db.Column(db.Float,nullable=False)
     fees_after_discount=db.Column(db.Float,nullable=False)
 
+    timeslots=db.relationship('TimeSlot', backref='Clinic', lazy=True)
 
+class TimeSlot(db.Model):
+    __tablename__ = "timeslots"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    clinic_id = db.Column(db.String(50),db.ForeignKey('clinics.clinicId'),nullable=False, index=True)
+    slot_date = db.Column(db.Date, nullable=False)  # Store the specific date
+    slot_day = db.Column(db.String(20), nullable=False)  # Store the day of the week
+    slot_time = db.Column(db.Time, nullable=False)  # Store the time of the slot
+    status = db.Column(db.String(12),nullable=False,default="Available")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "clinic_id": self.clinic_id,
+            "slot_date": str(self.slot_date),
+            "slot_day": self.slot_day,
+            "slot_time": str(self.slot_time)
+        }
 
 class Payment(db.Model):
     __tablename__ = 'payments'
@@ -126,4 +145,3 @@ class Payment(db.Model):
     payment_date = db.Column(db.DateTime, default=datetime.now, nullable=False)
     payment_method = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(50), default="Completed", nullable=False)
-

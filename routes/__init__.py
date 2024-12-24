@@ -1,3 +1,3 @@
 from .auth_routes import login, logout,register,doctor_registration
 from .appointment_routes import book_appointment, update_appointment,get_appointment,delete_appointment
-from .doctors_routes import get_location_of_clinics,add_location_of_clinics,update_location_of_clinics,delete_location_of_clinics
+from .doctors_routes import get_info_of_clinics,add_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,add_time_slots,get_time_slots,delete_time_slots

@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager, login_required
 import os
-from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_location_of_clinics,update_location_of_clinics,delete_location_of_clinics,add_location_of_clinics,get_appointment,delete_appointment
+from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,get_time_slots,add_time_slots,delete_time_slots,add_info_of_clinics,get_appointment,delete_appointment
 from models import db,User,Doctor
 
 app = Flask(__name__)
@@ -38,14 +38,17 @@ app.add_url_rule('/appointments/get/<userId>', view_func=login_required(get_appo
 app.add_url_rule('/appointments/delete/<appointmentId>', view_func=login_required(delete_appointment), methods=['DELETE'])
 app.add_url_rule('/appointments/update/<int:appointment_id>', view_func=login_required(update_appointment), methods=['PUT'])
 
-# doctor routes
+#doctor's routes
 app.add_url_rule('/auth/doctor/register', view_func=doctor_registration, methods=['POST'])
-app.add_url_rule('/doctor/getclinics/<doctorId>', view_func=get_location_of_clinics, methods=['GET'])
-app.add_url_rule('/doctor/addclinics/<doctorId>', view_func=add_location_of_clinics, methods=['POST'])
-app.add_url_rule('/doctor/updateclinics/<clinicId>', view_func=update_location_of_clinics, methods=['PUT'])
-app.add_url_rule('/doctor/deleteclinics/<clinicId>', view_func=delete_location_of_clinics, methods=['DELETE'])
-
-
+######clinic routes
+app.add_url_rule('/doctor/getclinics/<doctorId>', view_func=get_info_of_clinics, methods=['GET'])
+app.add_url_rule('/doctor/addclinics/<doctorId>', view_func=add_info_of_clinics, methods=['POST'])
+app.add_url_rule('/doctor/updateclinics/<clinicId>', view_func=update_info_of_clinics, methods=['PUT'])
+app.add_url_rule('/doctor/deleteclinics/<clinicId>', view_func=delete_info_of_clinics, methods=['DELETE'])
+######time slots routes
+app.add_url_rule('/doctor/addtime/<clinicId>',view_func=add_time_slots,methods=['POST'])
+app.add_url_rule('/doctor/gettime/<clinicId>',view_func=get_time_slots,methods=['GET'])
+app.add_url_rule('/doctor/deletetime/<Timeid>',view_func=get_time_slots,methods=['DELETE'])
 
 if __name__ == "__main__":
     with app.app_context():

@@ -117,13 +117,11 @@ def get_time_slots(clinicId):
     data = request.get_json()
     clinic_id = clinicId
     slot_day = data["day"]
-
     query = TimeSlot.query
     if clinic_id:
         query = query.filter_by(clinic_id=clinic_id)
     if slot_day:
         query = query.filter_by(slot_day=slot_day)
-
     slots = query.all()
     return jsonify([slot.to_dict() for slot in slots]), 200
 
@@ -139,3 +137,5 @@ def delete_time_slots(slot_id):
     db.session.delete(slot)
     db.session.commit()
     return jsonify({"message": "Time slot deleted successfully"}), 200
+
+

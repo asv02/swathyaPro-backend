@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager, login_required
 import os
-from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,get_time_slots,add_time_slots,delete_time_slots,add_info_of_clinics,get_appointment,delete_appointment
+from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,get_time_slots,add_time_slots,delete_time_slots,add_info_of_clinics,get_appointment,delete_appointment,get_facilities,add_facilities,update_facilities,delete_facilities,addAllFacilities,getAllFacilities,updateAllFacilities,deleteAllFacilities,addFaqs,addParameters,getFaqs,getParameters,updateFaqs,updateParameters,deleteParameters,deleteFaqs
 from models import db,User,Doctor
 
 app = Flask(__name__)
@@ -49,6 +49,31 @@ app.add_url_rule('/doctor/deleteclinics/<clinicId>', view_func=delete_info_of_cl
 app.add_url_rule('/doctor/addtime/<clinicId>',view_func=add_time_slots,methods=['POST'])
 app.add_url_rule('/doctor/gettime/<clinicId>',view_func=get_time_slots,methods=['GET'])
 app.add_url_rule('/doctor/deletetime/<Timeid>',view_func=get_time_slots,methods=['DELETE'])
+
+#Admin routes
+####Facility header APIs
+app.add_url_rule('/admin/addfacilityheader',view_func=add_facilities,methods=['POST'])
+app.add_url_rule('/admin/getfacilityheader',view_func=get_facilities,methods=['GET'])
+app.add_url_rule('/admin/updatefacilityheader/<id>',view_func=update_facilities,methods=['PUT'])
+app.add_url_rule('/admin/deletefacilityheader/<id>',view_func=delete_facilities,methods=['DELETE'])
+
+####Facilities APIs
+app.add_url_rule('/admin/addfacility',view_func=addAllFacilities,methods=['POST'])
+app.add_url_rule('/admin/getfacility/<id>',view_func=getAllFacilities,methods=['GET'])
+app.add_url_rule('/admin/updatefacility/<id>',view_func=updateAllFacilities,methods=['PUT'])
+app.add_url_rule('/admin/deletefacility/<id>',view_func=deleteAllFacilities,methods=['DELETE'])
+####FAQs APIs
+app.add_url_rule('/admin/addfaq',view_func=addFaqs,methods=['POST'])
+app.add_url_rule('/admin/getfaq/<id>',view_func=getFaqs,methods=['GET'])
+app.add_url_rule('/admin/updatefaq/<id>',view_func=updateFaqs,methods=['PUT'])
+app.add_url_rule('/admin/deletefaq',view_func=deleteFaqs,methods=['DELETE'])
+####Testparameters APIs
+app.add_url_rule('/admin/addparameters',view_func=addParameters,methods=['POST'])
+app.add_url_rule('/admin/getparameters/<id>',view_func=getParameters,methods=['GET'])
+app.add_url_rule('/admin/updateparameters/<id>',view_func=updateParameters,methods=['PUT'])
+app.add_url_rule('/admin/deleteparameters/<id>',view_func=deleteParameters,methods=['DELETE'])
+
+
 
 if __name__ == "__main__":
     with app.app_context():

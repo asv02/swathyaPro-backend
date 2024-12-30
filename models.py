@@ -1,7 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_login import UserMixin
-
+from sqlalchemy.schema import Sequence
+test_id_seq = Sequence('test_id_seq', start=990001) #testId starts from 990001
 db = SQLAlchemy()
 
 # Define models (tables)
@@ -132,6 +133,52 @@ class TimeSlot(db.Model):
             "slot_day": self.slot_day,
             "slot_time": str(self.slot_time)
         }
+
+############Test Models##############
+class Facilities(db.Model):
+    __tablename__="facilitiess"
+    id = db.Column(db.Integer,primary_key=True,unique=True,autoincrement=True,nullable=False)
+    facility_name=db.Column(db.String(100),nullable=False)
+    allfacilitiess=db.relationship('AllFacilities', backref='Facilities', lazy=True)
+
+class AllFacilities(db.Model):
+    __tablename__="allfacilitiess"
+    id= db.Column(db.Integer,primary_key=True)
+    facility_id = db.Column(db.Integer,db.ForeignKey('facilitiess.id'),nullable=False)
+    test_id = db.Column(db.Integer, unique=True, server_default=test_id_seq.next_value()) # first column need to be inserted manually with id=990001
+    test_name=db.Column(db.String(100),nullable=False)
+    price_for_test = db.Column(db.Integer,nullable=False)
+    discount_on_test=db.Column(db.Integer,nullable=True,default=0)
+    test_details=db.Column(db.String(100),nullable=True)
+    test_preparation_details=db.Column(db.String(100),nullable=True)
+    test_TAT=db.Column(db.String(100),nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+    facilityFaq=db.relationship('FacilityFaq',backref='AllFacilities',lazy=True)
+    test_parameters=db.relationship('facility_test_parameter',backref='AllFacilities',lazy=True)
+
+#Event for test_id_seq to set test_id start=990001
+@db.event.listens_for(db.metadata, 'before_create')
+def create_sequences(target, connection, **kwargs):
+    test_id_seq.create(connection)
+#Event to drop sequence after table is dropped
+@db.event.listens_for(db.metadata, 'after_drop')
+def drop_sequences(target, connection, **kwargs):
+    test_id_seq.drop(connection)
+
+class FacilityFaq(db.Model):
+    __tablename__='facilityFaqs'
+    id = db.Column(db.Integer,primary_key=True)
+    test_id=db.Column(db.Integer,db.ForeignKey('allfacilitiess.test_id'))
+    faq= db.Column(db.String(200),nullable=False)
+    faqa=db.Column(db.String(500),nullable=False)
+
+class facility_test_parameter(db.Model):
+    __tablename__='testParameters'
+    id = db.Column(db.Integer,primary_key=True)
+    test_Id=db.Column(db.Integer,db.ForeignKey('allfacilitiess.test_id'))
+    parameter_name=db.Column(db.String(50),nullable=False)
+    parameter_child_name=db.Column(db.String(100),nullable=False)
 
 class Payment(db.Model):
     __tablename__ = 'payments'

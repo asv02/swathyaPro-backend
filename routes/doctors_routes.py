@@ -23,35 +23,45 @@ def get_info_of_clinics(doctorId):
 @login_required
 def add_info_of_clinics(doctorId):
    
-    # print(dir(current_user))
     try:
         if current_user.doctorId != doctorId:
+            print("current->",type(current_user.doctorId))
+            print(type(doctorId))
             return jsonify({"Error":"You are adding clinic to another doctor's profile"}),400
         
         data = request.get_json()
-        required_fields = ["address", "city", "pincode", "state", "fees","discount_percentage"]
+        required_fields = ["active_status","address", "city", "pincode", "state", "fees","discount_percentage"]
 
         if not data or not all(field in data for field in required_fields):
             return jsonify({"error": "Insufficient data!!"}), 400
+        try:
+            fees = float(data["fees"])
+            discount_percentage = float(data["discount_percentage"]) 
+            fees_after_discount = fees - (fees * discount_percentage / 100)
+        except ValueError as e:
+            fees_after_discount = fees  # Set fees_after_discount to fees if calculation fails
+            print(f"There is an error in calculating fees after discount: {str(e)}")
+        except Exception as e:
+            print(f"Error during calculation: {str(e)}")
+            raise e
 
         new_clinic= Clinic(
-        clinicId=generate_clinicId(),
         doctor_at_clinic=doctorId,
         address =data["address"],
-        active_status = data["active_status"],
+        active_status = data["active_status"].lower == "true",
         city = data["city"],
         pincode=data["pincode"],
         state= data["state"],
         fees= data["fees"],
         discount_percentage= float(data["discount_percentage"]),
-        fees_after_discount = data["fees"] - float(data["fees"] * data["discount_percentage"] / 100))
+        fees_after_discount = fees_after_discount)
 
         #add to database
         db.session.add(new_clinic)
         db.session.commit() 
         return jsonify({"message":"Successfull added the clinic"}),201
     except Exception as e:
-        return jsonify({"Error":f"There is error in adding clinic info {str(e)}"}),500
+        return jsonify({"Error":f"There is error in adding clinic info, {str(e)}"}),500
 
 #not to give doctorId option to update
 @login_required
@@ -70,11 +80,17 @@ def update_info_of_clinics(clinicId):
             setattr(temp_clinic, field, value)
     
     #Handle fees after discount
-    if data["discount_percentage"]:
-        temp_clinic.fees_after_discount = temp_clinic.fees - float(temp_clinic.fees * data["discount_percentage"] / 100)
+        try:
+            fees = float(data["fees"])
+            discount_percentage = float(data["discount_percentage"]) 
+            fees_after_discount = fees - (fees * discount_percentage / 100)
+            temp_clinic.fees_after_discount = fees_after_discount
+        except ValueError as e:
+            fees_after_discount = fees  # Set fees_after_discount to fees if calculation fails
+            print(f"There is an error in calculating fees after discount: {str(e)}")
 
     db.session.commit()
-    return jsonify({"Success":"Updated the info info."}),201
+    return jsonify({"Success":"Updated the info."}),201
 
 
 @login_required

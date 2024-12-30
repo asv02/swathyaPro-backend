@@ -41,14 +41,14 @@ app.add_url_rule('/appointments/update/<int:appointment_id>', view_func=login_re
 #doctor's routes
 app.add_url_rule('/auth/doctor/register', view_func=doctor_registration, methods=['POST'])
 ######clinic routes
-app.add_url_rule('/doctor/getclinics/<doctorId>', view_func=get_info_of_clinics, methods=['GET'])
-app.add_url_rule('/doctor/addclinics/<doctorId>', view_func=add_info_of_clinics, methods=['POST'])
-app.add_url_rule('/doctor/updateclinics/<clinicId>', view_func=update_info_of_clinics, methods=['PUT'])
-app.add_url_rule('/doctor/deleteclinics/<clinicId>', view_func=delete_info_of_clinics, methods=['DELETE'])
+app.add_url_rule('/doctor/getclinics/<int:doctorId>', view_func=get_info_of_clinics, methods=['GET'])
+app.add_url_rule('/doctor/addclinics/<int:doctorId>', view_func=add_info_of_clinics, methods=['POST'])
+app.add_url_rule('/doctor/updateclinics/<int:clinicId>', view_func=update_info_of_clinics, methods=['PUT'])
+app.add_url_rule('/doctor/deleteclinics/<int:clinicId>', view_func=delete_info_of_clinics, methods=['DELETE'])
 ######time slots routes
-app.add_url_rule('/doctor/addtime/<clinicId>',view_func=add_time_slots,methods=['POST'])
-app.add_url_rule('/doctor/gettime/<clinicId>',view_func=get_time_slots,methods=['GET'])
-app.add_url_rule('/doctor/deletetime/<Timeid>',view_func=get_time_slots,methods=['DELETE'])
+app.add_url_rule('/doctor/addtime/<int:clinicId>',view_func=add_time_slots,methods=['POST'])
+app.add_url_rule('/doctor/gettime/<int:clinicId>',view_func=get_time_slots,methods=['GET'])
+app.add_url_rule('/doctor/deletetime/<int:Timeid>',view_func=get_time_slots,methods=['DELETE'])
 
 #Admin routes
 ####Facility header APIs

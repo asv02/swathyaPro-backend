@@ -113,7 +113,7 @@ class Clinic(db.Model):
     city= db.Column(db.String(200),nullable=False)
     pincode= db.Column(db.Integer,nullable=False)
     state= db.Column(db.String(50),nullable=False)
-    fees= db.Column(db.Integer,nullable=False)
+    fees= db.Column(db.Float,nullable=False)
     discount_percentage= db.Column(db.Float,nullable=False)
     fees_after_discount=db.Column(db.Float,nullable=False)
 

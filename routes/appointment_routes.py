@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import  jsonify, request
+from sqlalchemy import delete
 from models import db, Appointment, AppointmentHistory,Doctor, User
 from flask_login import login_required,current_user 
 
@@ -90,7 +91,7 @@ def update_appointment(appointment_id):
 
         # Handle user-specific update (appointment time)
         if "appointment_time" in data:
-            if current_user.id != appointment.userId:
+            if current_user.userId != appointment.userId:
                 return jsonify({"error": "Unauthorized to update appointment time"}), 403
 
             # Parse and validate the new appointment time
@@ -107,7 +108,7 @@ def update_appointment(appointment_id):
             appointment_history_entry = AppointmentHistory(
                 appointment_id=appointment.id,
                 userId=appointment.userId,
-                doctor_id=appointment.doctor_id,
+                doctor_id=appointment.doctorId,
                 original_appointment_time=appointment.appointment_time,
                 updated_appointment_time=new_time,
                 status="Rescheduled",
@@ -141,7 +142,7 @@ def update_appointment(appointment_id):
             appointment_history_entry = AppointmentHistory(
                 appointment_id=appointment.id,
                 userId=appointment.userId,
-                doctor_id=appointment.doctor_id,
+                doctor_id=appointment.doctorId,
                 original_appointment_time=appointment.appointment_time,
                 updated_appointment_time=None,
                 status=new_status,
@@ -165,4 +166,12 @@ def update_appointment(appointment_id):
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
     
 def delete_appointment(appointmentId):
-    pass
+    try:
+        appointment = Appointment.query.get(appointmentId)
+        db.session.execute(delete(AppointmentHistory).where(AppointmentHistory.appointment_id == appointmentId))
+        db.session.delete(appointment)
+        db.session.commit()
+        return jsonify({"Success":"Appointment deleted successfully."}),201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"Error":f"Appointment deletion failed. {str(e)}"}),400

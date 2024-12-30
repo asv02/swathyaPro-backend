@@ -7,13 +7,13 @@ import bcrypt
 import os
 
 
-def gen_patient_id():
-   count = db.session.query(User).count()
-   return f"P_{count+1}"
+# def gen_patient_id():
+#    count = db.session.query(User).count()
+#    return f"P_{count+1}"
 
-def gen_doctor_id():
-   count = db.session.query(Doctor).count()
-   return f"D_{count+1}"
+# def gen_doctor_id():
+#    count = db.session.query(Doctor).count()
+#    return f"D_{count+1}"
 
 
 # Cloudinary configuration
@@ -30,13 +30,13 @@ def register():
         data = request.get_json()
 
         # Validate input data
-        required_fields = ["userId","first_name", "last_name", "email", "password", "date_of_birth", "contact"]
+        required_fields = ["first_name", "last_name", "email", "password", "date_of_birth", "contact"]
         if not data or not all(key in data for key in required_fields):
             return jsonify({"error": "Invalid input data"}), 400
 
-        # Check if the userId is already in use
-        if User.query.filter_by(userId=data["userId"]).first():
-            return jsonify({"error": "User with this userId is already registered"}), 409
+        # # Check if the userId is already in use
+        # if User.query.filter_by(userId=data["userId"]).first():
+        #     return jsonify({"error": "User with this userId is already registered.Contact to Support Team"}), 409
 
         # Check if the email is already in use
         if User.query.filter_by(email=data["email"]).first():
@@ -48,7 +48,6 @@ def register():
         # Create a new User instance
         new_user = User(
             first_name=data["first_name"],
-            userId=data["userId"],
             last_name=data["last_name"],
             email=data["email"],
             password=hashed_password.decode('utf-8'),  # Store the hashed password as a string
@@ -72,16 +71,21 @@ def register():
 def doctor_registration():
     try:
         data = request.form
-        image = request.files.get('image')
+        image = None
+        print(data)
+        try:
+            image=request.files.get('image')
+        except Exception as e:
+            print("Image Unavailable")
 
         # Validate input data
-        required_fields = ["doctorId","first_name", "last_name", "email", "password", "contact", "specialization", "years_of_experience", "clinic_address", "clinic_pincode", "state", "available_time_start"]
+        required_fields = ["first_name", "last_name", "email", "password", "contact", "specialization", "years_of_experience","state", "available_time_start","available_time_end","is_active"]
         if not data or not all(field in data for field in required_fields):
             return jsonify({"error": "Invalid input data"}), 400
 
-        # Check if the email is already in use
-        if Doctor.query.filter_by(doctorId=data["doctorId"]).first():
-            return jsonify({"error": "Doctor with this doctorId is already registered"}), 409
+        # # Check if the email is already in use
+        # if Doctor.query.filter_by(doctorId=data["doctorId"]).first():
+        #     return jsonify({"error": "Doctor with this doctorId is already registered.Contact to Support Team"}), 409
 
         # Check if the email is already in use
         if Doctor.query.filter_by(email=data["email"]).first():
@@ -101,25 +105,34 @@ def doctor_registration():
                 print("image url->",image_url)
         except Exception as e:
             print("Error during uploading image ->",e)
+        #Handle start and end time
+        available_time_start = None
+        available_time_end = None
+        try:
+            available_time_start = datetime.strptime(data["available_time_start"], "%H:%M").time()
+            available_time_end = datetime.strptime(data["available_time_end"], "%H:%M").time()
+        except ValueError as ve:
+            print(available_time_start)
+            print(available_time_end)
+            return jsonify({"error": f"Invalid time format.{str(e)}"}), 400
+        
         # Create a new Doctor instance
         new_doctor = Doctor(
             first_name=data["first_name"],
             last_name=data["last_name"],
-            doctorId=data["doctorId"],
             email=data["email"],
             password=hashed_password.decode('utf-8'),  #hashed password is provided
             contact=data["contact"],
-            alternate_contact=data.get("alternate_contact"),
+            alternate_contact=data["alternate_contact"],
             specialization=data["specialization"],
             years_of_experience=int(data["years_of_experience"]),
-            clinic_address=data["clinic_address"],
-            clinic_pincode=data["clinic_pincode"],
             state=data["state"],
-            available_time_start=datetime.strptime(data["available_time_start"], "%H:%M").time(),
-            available_time_end=datetime.strptime(data["available_time_end"], "%H:%M").time(),
+            available_time_start=available_time_start,
+            available_time_end=available_time_end,
+            is_active = data["is_active"].lower() == "true",
             image_url=image_url
         )
-
+        print("new_doctor->",new_doctor)
         # Add the doctor to the database
         db.session.add(new_doctor)
         db.session.commit()

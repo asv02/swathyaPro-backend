@@ -39,7 +39,7 @@ def register():
         #     return jsonify({"error": "User with this userId is already registered.Contact to Support Team"}), 409
 
         # Check if the email is already in use
-        if User.query.filter_by(email=data["email"]).first():
+        if User.query.filter_by(email=data["email"]).first() or Doctor.query.filter_by(email=data["email"]).first():
             return jsonify({"error": "Email already registered"}), 409
 
         # Hash the password
@@ -90,6 +90,10 @@ def doctor_registration():
         # Check if the email is already in use
         if Doctor.query.filter_by(email=data["email"]).first():
             return jsonify({"error": "Email already registered"}), 409
+        
+        # Check if the email is already in use
+        if User.query.filter_by(email=data["email"]).first():
+            return jsonify({"error": "Email already registered as User"}), 409
         
                 # Hash the password
         hashed_password = bcrypt.hashpw(data["password"].encode('utf-8'), bcrypt.gensalt())
@@ -144,7 +148,6 @@ def doctor_registration():
 
 #should be used for user and doctors both
 def login():
-    
     data = request.get_json()
     # Validate input
     if not data or "email" not in data or "password" not in data:

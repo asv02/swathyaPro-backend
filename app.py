@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager, login_required
 import os
-from routes import register,doctor_registration,login, logout, book_appointment, update_appointment,get_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,get_time_slots,add_time_slots,delete_time_slots,add_info_of_clinics,get_appointment,delete_appointment,get_facilities,add_facilities,update_facilities,delete_facilities,addAllFacilities,getAllFacilities,updateAllFacilities,deleteAllFacilities,addFaqs,addParameters,getFaqs,getParameters,updateFaqs,updateParameters,deleteParameters,deleteFaqs
+from routes import email_verification,verify_otp,register,doctor_registration,login, logout, book_appointment, update_appointment,get_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,get_time_slots,add_time_slots,delete_time_slots,add_info_of_clinics,get_appointment,delete_appointment,get_facilities,add_facilities,update_facilities,delete_facilities,addAllFacilities,getAllFacilities,updateAllFacilities,deleteAllFacilities,addFaqs,addParameters,getFaqs,getParameters,updateFaqs,updateParameters,deleteParameters,deleteFaqs
 from models import db,User,Doctor
 
 app = Flask(__name__)
@@ -10,6 +10,7 @@ app.config['SECRET_KEY'] = os.urandom(24)
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost:5432/demo'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 # Initialize the database
 db.init_app(app)
 
@@ -28,6 +29,8 @@ def load_user(user_id):
 
 # Associate routes to the app
 #general routes
+app.add_url_rule('/auth/emailVerification', view_func=email_verification, methods=['POST'])
+app.add_url_rule('/auth/otpVerification/<email>', view_func=verify_otp, methods=['POST'])
 app.add_url_rule('/auth/login', view_func=login, methods=['POST'])
 app.add_url_rule('/auth/logout', view_func=logout, methods=['POST'])
 
@@ -72,8 +75,6 @@ app.add_url_rule('/admin/addparameters',view_func=addParameters,methods=['POST']
 app.add_url_rule('/admin/getparameters/<id>',view_func=getParameters,methods=['GET'])
 app.add_url_rule('/admin/updateparameters/<id>',view_func=updateParameters,methods=['PUT'])
 app.add_url_rule('/admin/deleteparameters/<id>',view_func=deleteParameters,methods=['DELETE'])
-
-
 
 if __name__ == "__main__":
     with app.app_context():

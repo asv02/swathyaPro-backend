@@ -1,11 +1,15 @@
-from flask import Flask, jsonify, request
-from flask_login import current_user 
-from models import db, User,Doctor,datetime
+from flask import Flask, jsonify, request, current_app
+from flask_login import current_user
+from models import db, User,Doctor,datetime,EmailVerification
+from utilities import send_email
+from datetime import datetime, timedelta
+from itsdangerous import URLSafeTimedSerializer,SignatureExpired
 from flask_login import LoginManager,login_user,logout_user
 import cloudinary.uploader
 import bcrypt  
-import os
+from random import randint
 
+# serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
 
 # def gen_patient_id():
 #    count = db.session.query(User).count()
@@ -15,7 +19,6 @@ import os
 #    count = db.session.query(Doctor).count()
 #    return f"D_{count+1}"
 
-
 # Cloudinary configuration
 cloudinary.config(
     cloud_name="dni5wcbsz",
@@ -23,12 +26,82 @@ cloudinary.config(
     api_secret="L2ZC4nw7qdIjYZsLI1DlIX7JUc4"
 )
 
+
 #user register and send a verification email to personal email, if verified then only access.
+
+def send_verification_otp(email):
+    try:
+        # Check if user or doctor exists
+        if User.query.filter_by(email=email).first() and Doctor.query.filter_by(email=email).first():
+            return jsonify({"error": "Email Already registered"}), 404
+
+        # Generate OTP
+        otp = f"{randint(100000, 999999)}"
+        expiry_time = datetime.now() + timedelta(minutes=5)
+
+        # Store OTP in the database
+        existing_entry = EmailVerification.query.filter_by(email=email).first()
+        if existing_entry:
+            existing_entry.otp = otp
+            existing_entry.expires_at = expiry_time
+        else:
+            new_entry = EmailVerification(email=email, otp=otp, expires_at=expiry_time)
+            db.session.add(new_entry)
+        db.session.commit()
+
+        ##################### Send email with OTP ################
+        
+        subject = "Your Verification OTP"
+        body = f"Your OTP for email verification is {otp}. It is valid for 5 minutes."
+        try:
+            send_email(current_app,email, subject, body)
+        except Exception as e:
+            print(f'An exception occured. {str(e)}')
+        print("OTP send")
+
+    except Exception as e:
+        print("Error in sending OTP")
+##########ISSUE: Email Sending, check above function, baaki sab thik
+
+#Step1 - main function to send verification
+def email_verification():
+    data = request.get_json()
+    email = data["email"]    
+    send_verification_otp(email)
+    return jsonify({"OTP sent successfully at:":email}),201
+
+#Step-2
+def verify_otp(email):
+    data = request.get_json()
+    otp = (data["otp"])
+    try:
+        # Fetch OTP from the database
+        verification = EmailVerification.query.filter_by(email=email).first()
+
+        if not verification:
+            return jsonify({"error": "Invalid request. OTP not found."}), 404
+
+        # Check OTP and expiry
+        if verification.otp != otp:
+            return {email:False}
+        if datetime.now() > verification.expires_at:
+            return {email:False}
+
+        # Mark the email as verified (update the User/Doctor record)
+        # user = User.query.filter_by(email=email).first()
+        # doctor = Doctor.query.filter_by(email=email).first()
+ 
+        db.session.delete(verification)
+        db.session.commit()
+        return {email:True}
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 def register():
     try:
         # Get JSON data from the request
         data = request.get_json()
-
         # Validate input data
         required_fields = ["first_name", "last_name", "email", "password", "date_of_birth", "contact"]
         if not data or not all(key in data for key in required_fields):
@@ -49,7 +122,7 @@ def register():
         new_user = User(
             first_name=data["first_name"],
             last_name=data["last_name"],
-            email=data["email"],
+            email=data["email"], #IMPORTANT : NEED TO GET THIS DATA FROM VERIFY OTP API
             password=hashed_password.decode('utf-8'),  # Store the hashed password as a string
             date_of_birth=data["date_of_birth"],
             contact=int(data["contact"]),
@@ -58,11 +131,10 @@ def register():
             pincode=int(data["pincode"]),
             state=data["state"]
         )
-
-        # Add the user to the database
+        # Add the user to the database 
+        #Not implemented that if user is verified with above otp function then only save it.
         db.session.add(new_user)
         db.session.commit()
-
         return jsonify({"message": "User registered successfully"}), 201
 
     except Exception as e:
@@ -140,7 +212,6 @@ def doctor_registration():
         # Add the doctor to the database
         db.session.add(new_doctor)
         db.session.commit()
-
         return jsonify({"message": "Doctor registered successfully", "doctor_id": new_doctor.doctorId}), 201
 
     except Exception as e:
@@ -181,6 +252,54 @@ def login():
 def logout():
     logout_user()
     return jsonify({"message": "Logged out successfully"}), 200
+
+
+# def request_password_reset():
+#     data = request.get_json()
+#     email = data.get('email')
+
+#     if not email:
+#         return jsonify({'error': 'Email is required'}), 400
+
+#     # Check if the email exists
+#     user = User.query.filter_by(email=email).first()
+#     if not user:
+#         return jsonify({'error': 'Email not registered'}), 404
+
+#     # Generate token
+#     token = serializer.dumps(email, salt='password-reset-salt')
+#     reset_link = f"http://127.0.0.1:5000/auth/reset-password/{token}"
+
+#     # Send email asynchronously
+#     # send_reset_email.delay(email, reset_link)
+
+#     return jsonify({'message': 'Password reset link sent!'}), 200
+
+# def reset_password(token):
+#     data = request.get_json()
+#     new_password = data.get('password')
+
+#     if not new_password:
+#         return jsonify({'error': 'Password is required'}), 400
+
+#     try:
+#         # Decode token
+#         email = serializer.loads(token, salt='password-reset-salt', max_age=900)  # Token expires in 15 minutes
+#     except SignatureExpired:
+#         return jsonify({'error': 'Token expired'}), 400
+#     except Exception:
+#         return jsonify({'error': 'Invalid token'}), 400
+
+#     # Find the user
+#     user = User.query.filter_by(email=email).first()
+#     if not user:
+#         return jsonify({'error': 'Email not found'}), 404
+
+#     # Update password
+#     user.password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+#     db.session.commit()
+#     return jsonify({'message': 'Password reset successful!'}), 200
+
 
 def recoverPassword():
     pass

@@ -1,10 +1,17 @@
-import os
+# import os
 
-class Config:
-    MAIL_SERVER = 'smtp.gmail.com'  # or your mail server
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.getenv("MAIL_USERNAME", "your-email@example.com")
-    MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "your-email-password")
-    CELERY_BROKER_URL = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+# class Config:
+#     SECRET_KEY = os.urandom(24)
+#     SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:admin@localhost:5432/demo'
+#     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+#     # Email Configuration
+#     MAIL_SERVER = 'live.smtp.mailtrap.io'
+#     MAIL_PORT = 587
+#     MAIL_USE_TLS = True
+#     MAIL_USERNAME = 'smtp@mailtrap.io'
+#     MAIL_PASSWORD = '11730fd06f2816a9c5098c6c85aee85c'
+
+#     # Celery Configuration
+#     CELERY_BROKER_URL = 'redis://localhost:6379/0'
+#     CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'

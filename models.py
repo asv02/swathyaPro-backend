@@ -10,6 +10,14 @@ clinic_id_seq = Sequence('doctor_id_seq', start=11000001) #testId starts from 99
 db = SQLAlchemy()
 
 # Define models (tables)
+
+class EmailVerification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    otp = db.Column(db.String(6), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)  # Set OTP expiry
+
 class User(UserMixin,db.Model):
     __tablename__ = 'users'  
     # id = db.Column(db.Integer, primary_key=True)  # Auto-incrementing primary key
@@ -121,6 +129,7 @@ class Clinic(db.Model):
 
 class TimeSlot(db.Model):
     __tablename__ = "timeslots"
+    # table name as doctor...
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     clinic_id = db.Column(db.Integer,db.ForeignKey('clinics.clinicId'),nullable=False, index=True)

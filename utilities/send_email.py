@@ -1,31 +1,38 @@
-from flask_mail import Mail, Message
+import json
+import smtplib
+import datetime
+from email.message import EmailMessage
+from flask import  jsonify, request
 
-def send_email(app, recipient, subject, body):
-    if not recipient or not subject or not body:
-        return {'error': 'Missing recipient, subject, or body'}, 400
+# Gmail SMTP server configuration
+
+smtp_server = 'smtp.gmail.com'
+smtp_port = 587  # Use 465 for SSL or 587 for TLS
+
+today = datetime.date.today()
+date_string = today.strftime('%B %d, %Y')
+def send_email():
+    data = request.get_json() #data contains recipient_email,subject,body
+    subject = data['subject']
+    body = data['body']
+    sender_email = 'rocktheway.2akash@gmail.com'  
+    recipient_email = data['recipient']
+    password = '*******' 
+
+    # Create an EmailMessage instance
+    msg = EmailMessage()
+    msg.set_content(body)
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+
 
     try:
-        mail = Mail(app)  # Use the provided app instance
-        msg = Message(subject, sender='rocktheway.2akash@mailtrap.club', recipients=[recipient])
-        msg.body = body
-        with app.app_context():  # Ensure the context is correct
-            mail.send(msg)
-        return print('Email sent successfully!')
+        # Connect to the Gmail SMTP server
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()  # Upgrade the connection to secure TLS
+            server.login(sender_email, password)  # Authenticate with the server
+            server.send_message(msg)
+        return jsonify("Email sent successfully!"),201
     except Exception as e:
-        return print(f'Failed to send email: {str(e)}')
-
-
-def send_reset_email(app,email, reset_link):
-    try:
-        msg = Message(
-            "Password Reset Request",
-            sender="noreply@yourdomain.com",
-            recipients=[email]
-        )
-        mail = Mail(app)
-        msg.body = f"Click the link to reset your password: {reset_link}"
-        with app.app_context():
-            mail.send(msg)
-        return "Email sent"
-    except Exception as e:
-        return f"Failed to send email: {str(e)}"
+        return jsonify("Email not sent successfully!"),404

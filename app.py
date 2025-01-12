@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_login import LoginManager, login_required
 import os
+from utilities import send_email
 from routes import email_verification,verify_otp,register,doctor_registration,login, logout, book_appointment, update_appointment,get_info_of_clinics,update_info_of_clinics,delete_info_of_clinics,get_time_slots,add_time_slots,delete_time_slots,add_info_of_clinics,get_appointment,delete_appointment,get_facilities,add_facilities,update_facilities,delete_facilities,addAllFacilities,getAllFacilities,updateAllFacilities,deleteAllFacilities,addFaqs,addParameters,getFaqs,getParameters,updateFaqs,updateParameters,deleteParameters,deleteFaqs
 from models import db,User,Doctor
 
@@ -33,6 +34,7 @@ app.add_url_rule('/auth/emailVerification', view_func=email_verification, method
 app.add_url_rule('/auth/otpVerification/<email>', view_func=verify_otp, methods=['POST'])
 app.add_url_rule('/auth/login', view_func=login, methods=['POST'])
 app.add_url_rule('/auth/logout', view_func=logout, methods=['POST'])
+app.add_url_rule('/sendEmail', view_func=send_email, methods=['POST'])
 
 #user routes
 app.add_url_rule('/auth/register', view_func=register, methods=['POST'])

@@ -8,3 +8,5 @@ def make_celery(app):
     )
     celery.conf.update(app.config)
     return celery
+
+

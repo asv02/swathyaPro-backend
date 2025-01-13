@@ -1,6 +1,8 @@
+from enum import unique
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from flask_login import UserMixin
+from sqlalchemy import false
 from sqlalchemy.schema import Sequence
 test_id_seq = Sequence('test_id_seq', start=9900001) #testId starts from 990001
 user_id_seq = Sequence('user_id_seq', start=55000001) #testId starts from 990001
@@ -17,6 +19,39 @@ class EmailVerification(db.Model):
     otp = db.Column(db.String(6), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now(), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=False)  # Set OTP expiry
+
+class Admin(UserMixin, db.Model):
+    __tablename__ = 'admins'
+
+    user_id = db.Column(db.Integer, unique=True, primary_key=True)  # Fixed typo: Coluumn -> Column, Interger -> Integer
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(100), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.role_id'), nullable=False)  # Foreign key to the Roles table
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+
+    role_id = db.Column(db.Integer, unique=True, primary_key=True)
+    role_name = db.Column(db.String(50), nullable=False)  # e.g., Super Admin, Admin, Moderator
+    description = db.Column(db.String(200))
+    admins = db.relationship('Admin', backref='role', lazy=True)  # Fixed backref name for consistency
+    role_permissions = db.relationship('RolePermissions', backref='role', lazy=True)  # Fixed backref name for clarity
+
+class Permission(db.Model):
+    __tablename__ = 'permissions'
+
+    permission_id = db.Column(db.Integer, unique=True, primary_key=True)
+    permission_name = db.Column(db.String(50), nullable=False)  # e.g., 'Manage Users', 'Delete Content'
+    description = db.Column(db.String(200), nullable=False)
+    role_permissions = db.relationship('RolePermissions', backref='permission', lazy=True)
+
+class RolePermissions(db.Model):
+    __tablename__ = 'role_permissions'
+
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.role_id'), primary_key=True)  # Foreign key to Roles table
+    permission_id = db.Column(db.Integer, db.ForeignKey('permissions.permission_id'), primary_key=True)  # Foreign key to Permissions table
 
 class User(UserMixin,db.Model):
     __tablename__ = 'users'  

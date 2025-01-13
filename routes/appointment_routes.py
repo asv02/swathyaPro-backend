@@ -1,8 +1,9 @@
 from datetime import datetime
 from flask import  jsonify, request
 from sqlalchemy import delete
-from models import db, Appointment, AppointmentHistory,Doctor, User
+from models import db, Appointment, AppointmentHistory,Doctor, User,Clinic
 from flask_login import login_required,current_user 
+from utilities import appointmentBody, send_email
 
 
 #return dictionary
@@ -65,7 +66,20 @@ def book_appointment():
         # Add the appointment history to the database
         db.session.add(appointmentHistory)
         db.session.commit()
+        # Send an email to the patient with appointment details
+        doctor = Doctor.query.filter_by(doctorId=data["doctorId"]).first()
+        user = User.query.filter_by(userId=current_user.userId).first()
+        print("Doctor ->", doctor)
+        print("User ->", user)
+        clinic = Clinic.query.filter_by(clinicId=data["appointment_location"]).first()
+        print("Clinic ->", clinic)
 
+        message_to_patient = appointmentBody(new_appointment.id,doctor.specialization,user.first_name,doctor.last_name,clinic.address,doctor.first_name,doctor.contact,data["appointment_time"])
+
+        print("Body Ready")
+        recieverList = ["rocktheway.2akash@gmail.com"]
+        send_email(recieverList,message_to_patient)
+        print("Email Ready")
         return jsonify({"message": "Appointment booked successfully", "appointment_id": new_appointment.id}), 201
 
     except Exception as e:
